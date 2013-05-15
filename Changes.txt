@@ -1,0 +1,71 @@
+﻿RandomGenerator -> RandomNumberGenerator (Implemented Singleton design pattern)
+_t: from string[,] to char[,], since it only contains single characters
+Follow up changes: "." -> '.'; Queue<string> -> Queue<char> etc.
+(char)('0' + RandomNumberGenerator.Instance.Next(1, 5)) to generate the numbers 1 through 4
+All static methods are refactored to non- static ones
+Launcher now creates an instance of the Engine class and calls its Start() method to start the game
+shirina -> TotalRows
+length -> TotalColumns
+_t -> gameField
+clearedCells -> clearedCellsCount
+userMoves -> userMovesCount
+gameField, userInput and statistics made readonly
+
+IsLegalMove completely refactored:
+private static bool IsLegalMove(int i, int j)
+{
+	if ((i < 0) || (j < 0) || (j > length - 1) || (i > shirina - 1)) return false;
+	else return (_t[i, j] != ".");
+}			
+			
+private bool IsLegalMove(int row, int column)
+{
+	bool isInsideRowBounds = row >= 0 && row < TotalRows;
+	bool isInsideColumnBounds = column >= 0 && column < TotalColumns;
+
+	bool isInsideGameFieldBounds = isInsideRowBounds && isInsideColumnBounds;
+
+	bool isLegalMove = true;
+
+	if (!isInsideGameFieldBounds)
+	{
+		isLegalMove = false;
+	}
+	else
+	{
+		isLegalMove = gameField[row, column] != '.';
+	}
+
+	return isLegalMove;
+}
+
+userInput changed from StringBuilder to string
+Follow up changes:
+GameLogic(StringBuilder userInput) -> GameLogic(string userInput)
+userInput.Clear() -> userInput = string.Empty;
+
+Series of if statements converted to a switch statement on userInput
+switch (userInput)
+{
+	case "":
+		InvalidInput();
+		break;
+	case "top":
+		ShowStatistics();
+		userInput = string.Empty;
+		goto Play;
+	case "restart":
+		userInput = string.Empty; 
+		Restart();
+		break;
+	case "exit":
+		Exit();
+		break;
+	default:
+		// Unknown command exception
+		break;
+} 
+
+Several useless .ToString() calls omitted
+
+CreateTable -> InitialiseGameField
