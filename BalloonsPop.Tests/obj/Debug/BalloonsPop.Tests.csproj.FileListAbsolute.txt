@@ -1,0 +1,7 @@
+D:\Documents\Programming\C#\High Quality Code\TeamIodine\BalloonsPop.Tests\bin\Debug\BalloonsPop.Tests.dll
+D:\Documents\Programming\C#\High Quality Code\TeamIodine\BalloonsPop.Tests\bin\Debug\BalloonsPop.Tests.pdb
+D:\Documents\Programming\C#\High Quality Code\TeamIodine\BalloonsPop.Tests\bin\Debug\BalloonsPop.exe
+D:\Documents\Programming\C#\High Quality Code\TeamIodine\BalloonsPop.Tests\bin\Debug\BalloonsPop.pdb
+D:\Documents\Programming\C#\High Quality Code\TeamIodine\BalloonsPop.Tests\obj\Debug\BalloonsPop.Tests.csprojResolveAssemblyReference.cache
+D:\Documents\Programming\C#\High Quality Code\TeamIodine\BalloonsPop.Tests\obj\Debug\BalloonsPop.Tests.dll
+D:\Documents\Programming\C#\High Quality Code\TeamIodine\BalloonsPop.Tests\obj\Debug\BalloonsPop.Tests.pdb

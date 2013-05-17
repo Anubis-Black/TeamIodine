@@ -6,15 +6,11 @@
 
     public class Engine
     {
-        public const int TotalRows = 5;
-        public const int TotalColumns = 10;
-
         private const int TopFive = 5;
 
-        private readonly char[,] gameField = new char[TotalRows, TotalColumns];
         private readonly SortedDictionary<int, string> highScores = new SortedDictionary<int, string>();
+        private readonly IList<IRenderable> gameObjects;
 
-        private IList<IRenderable> gameObjects;
         private IList<Balloon> balloons;
 
         private int userMovesCount = 0;
@@ -28,114 +24,45 @@
 
         public IRenderer Renderer { get; private set; }
 
-        public bool ShouldEndGame { get; private set; }
+        public bool GameCompleted { get; private set; }
+
+        public bool QuitRequested { get; set; }
 
         public void Start()
         {
             Console.WriteLine("Welcome to “Balloons Pops” game. Please try to pop the balloons. Use 'top' to view the top scoreboard, 'restart' to start a new game and 'exit' to quit the game.");
+            Console.ReadLine();
             this.userMovesCount = 0;
 
-            this.InitialiseGameField();            
+            this.InitialiseGameObjects();            
 
             this.Renderer.RenderObjects(this.gameObjects);
 
-            this.ShouldEndGame = false;
+            this.GameCompleted = false;
+            this.QuitRequested = false;
 
             do
             {
-                ICommand command = ParseUserInput();
+                ICommand command = this.ParseUserInput();
 
-                switch (command.Type)
+                PerformCommand(command);
+
+                if (!this.QuitRequested)
                 {
-                    case CommandType.AttemptPop:
-                        this.AttemptPop(command);
-                        break;
-                    case CommandType.Restart:
-                        this.Restart();
-                        break;
-                    case CommandType.Top:
-                        this.Top();
-                        break;
-                    case CommandType.Exit:
-                        this.Exit();
-                        break;
-                    default:
-                        throw new ArgumentException("Unknown command type.");
+                    this.Update();
+
+                    this.IsFinished();                    
                 }
-
-                foreach (GameObject gameObject in this.gameObjects)
-                {
-                    if (gameObject.IsDestroyed == true)
-                    {
-                        this.AmendObjectsAbove(gameObject);
-                    }
-                }
-
-                List<Balloon> balloons = (List<Balloon>)this.balloons;
-
-                balloons.RemoveAll(balloon => balloon.IsDestroyed);
-
-                this.balloons = balloons;
-
-                List<GameObject> gameObjects = new List<GameObject>();
-
-                foreach (GameObject gameObject in this.gameObjects)
-                {
-                    gameObjects.Add(gameObject);
-                }
-
-                IEnumerable<GameObject> remainingObjects = gameObjects.Where(gameObject => !gameObject.IsDestroyed);
-
-                this.gameObjects = new List<IRenderable>();
-
-                foreach (GameObject gameObject in remainingObjects)
-                {
-                    this.gameObjects.Add(gameObject);
-                }
-
-                this.Renderer.RenderObjects(this.gameObjects);
             }
-            while (!this.ShouldEndGame);
+            while (!this.GameCompleted && !this.QuitRequested);
 
-            this.EnterHighScore();
-        }
-  
-        private ICommand ParseUserInput()
-        {
-            Console.SetCursorPosition(0, 20);
-
-            Console.Write("Enter a row and a column: ");
-
-            string userInput = Console.ReadLine();
-
-            ICommand command = new Command(userInput);
-            return command;
-        }
-
-        private void AmendObjectsAbove(GameObject originObject)
-        {
-            Position originPosition = originObject.Position;
-
-            for (int index = originPosition.Y - 1; index >= 0; index--)
+            if (this.balloons.Count == 0)
             {
-                Position position = new Position(originPosition.X, index);
-
-                foreach (GameObject gameObject in this.gameObjects)
-                {
-                    if (gameObject.Position == position)
-                    {
-                        if (gameObject is Balloon)
-                        {
-                            Balloon balloon = gameObject as Balloon;
-
-                            balloon.UpdatePosition(new Position(0, 2));
-                        }
-                    }
-                }
-            }
+                this.EnterHighScore();
+            }            
         }
 
-        private void InitialiseGameField()
+        private void InitialiseGameObjects()
         {
             IFactory balloonFactory = new BalloonFactory();
 
@@ -157,6 +84,39 @@
             }
         }
   
+        private ICommand ParseUserInput()
+        {
+            Console.SetCursorPosition(0, 20);
+
+            Console.Write("Enter a row and a column: ");
+
+            string userInput = Console.ReadLine();
+
+            ICommand command = new Command(userInput);
+            return command;
+        }
+
+        private void PerformCommand(ICommand command)
+        {
+            switch (command.Type)
+            {
+                case CommandType.AttemptPop:
+                    this.AttemptPop(command);
+                    break;
+                case CommandType.Restart:
+                    this.Restart();
+                    break;
+                case CommandType.Top:
+                    this.Top();
+                    break;
+                case CommandType.Exit:
+                    this.Exit();
+                    break;
+                default:
+                    throw new ArgumentException("Unknown command type.");
+            }
+        }
+
         private void AttemptPop(ICommand command)
         {
             if (command.Parameters.Length != 2)
@@ -181,13 +141,13 @@
                 }
                 else
                 {
-                    row <<= 1;
-                    column <<= 1;
+                    row *= Constants.IterationStep;
+                    column *= Constants.IterationStep;
 
-                    Position popPosition = new Position(BalloonFactory.XOffset + column, BalloonFactory.YOffset + row);
+                    Position popPosition = new Position(Constants.XOffset + column, Constants.YOffset + row);
 
                     try
-                    {       
+                    {
                         this.PopBalloon(popPosition);
                         this.userMovesCount++;
                     }
@@ -195,82 +155,30 @@
                     {
                         Console.WriteLine(exception.Message);
                     }
-
-                    this.IsFinished();
                 }
             }
-        }
-
-        private void IsFinished()
-        {
-            if (this.balloons.Count == 0)
-            {
-                this.ShouldEndGame = true;
-            }
-        }
-
-        private void InvalidMove(int row, int column)
-        {
-            Console.WriteLine("There is no balloon at ({0}, {1}).", row, column);
         }
 
         private void InvalidCommand(ICommand command)
         {
             Console.WriteLine("'{0}' is not a valid command.", command.OriginalForm);
+            Console.ReadLine();
         }
 
         private bool IsLegalMove(int row, int column)
         {
-            bool isInsideRowBounds = row >= 0 && row < TotalRows;
-            bool isInsideColumnBounds = column >= 0 && column < TotalColumns;
+            bool isInsideRowBounds = row >= 0 && row < Constants.TotalRows;
+            bool isInsideColumnBounds = column >= 0 && column < Constants.TotalColumns;
 
-            bool isInsideGameFieldBounds = isInsideRowBounds && isInsideColumnBounds;
-
-            bool isLegalMove = true;
-
-            if (!isInsideGameFieldBounds)
-            {
-                isLegalMove = false;
-            }
+            bool isLegalMove = isInsideRowBounds && isInsideColumnBounds;
 
             return isLegalMove;
         }
 
-        private void Top()
+        private void InvalidMove(int row, int column)
         {
-            Console.WriteLine("Scoreboard:");
-
-            KeyValuePair<int, string>[] playerRankings = this.highScores.ToArray();
-
-            for (int index = 0; index < TopFive; index++)
-            {
-                KeyValuePair<int, string> player = playerRankings[index];
-
-                Console.WriteLine("{0}. {1} --> {2} moves", index, player.Value, player.Key);                
-            }
-        }
-
-        private void Exit()
-        {
-            this.ShouldEndGame = true;
-        }
-
-        private void Restart()
-        {
-            this.Start();
-        }
-
-        private void EnterHighScore()
-        {
-            Console.Write("You popped all baloons in {0} moves. Please enter your name for the top scoreboard: ", this.userMovesCount);
-
-            string userNickName = Console.ReadLine();
-
-            this.highScores.Add(this.userMovesCount, userNickName);
-
-            this.Top();
-
-            this.Start();            
+            Console.WriteLine("There is no balloon at ({0}, {1}).", row, column);
+            Console.ReadLine();
         }
 
         private void PopBalloon(Position popPosition)
@@ -296,49 +204,185 @@
             else
             {
                 // Left
-                for (int index = popPosition.X - 1; index >= 0; index--)
+                for (int index = popPosition.X - Constants.IterationStep; index >= Constants.XOffset; index -= Constants.IterationStep)
                 {
                     Position collateralPosition = new Position(index, popPosition.Y);
 
-                    this.PopCollateral(collateralPosition, balloonVisualisation);
+                    if (!this.CanPopCollateral(collateralPosition, balloonVisualisation))
+                    {
+                        break;
+                    }
                 }
 
                 // Right
-                for (int index = popPosition.X + 1; index < TotalColumns; index++)
+                for (int index = popPosition.X + Constants.IterationStep; index < Constants.XOffset + Constants.MaximalXPosition; index += Constants.IterationStep)
                 {
                     Position collateralPosition = new Position(index, popPosition.Y);
 
-                    this.PopCollateral(collateralPosition, balloonVisualisation);
+                    if (!this.CanPopCollateral(collateralPosition, balloonVisualisation))
+                    {
+                        break;
+                    }
                 }
 
                 // Up
-                for (int index = popPosition.Y - 1; index >= 0; index--)
+                for (int index = popPosition.Y - Constants.IterationStep; index >= Constants.YOffset; index -= Constants.IterationStep)
                 {
                     Position collateralPosition = new Position(popPosition.X, index);
 
-                    this.PopCollateral(collateralPosition, balloonVisualisation);
+                    if (!this.CanPopCollateral(collateralPosition, balloonVisualisation))
+                    {
+                        break;
+                    }
                 }
 
                 // Down
-                for (int index = popPosition.X + 1; index < TotalRows; index++)
+                for (int index = popPosition.Y + Constants.IterationStep; index < Constants.YOffset + Constants.MaximalYPosition; index += Constants.IterationStep)
                 {
                     Position collateralPosition = new Position(popPosition.X, index);
 
-                    this.PopCollateral(collateralPosition, balloonVisualisation);
+                    if (!this.CanPopCollateral(collateralPosition, balloonVisualisation))
+                    {
+                        break;
+                    }
                 }
-            }            
+            }
         }
 
-        private void PopCollateral(Position popPosition, char balloonVisualisation)
+        private bool CanPopCollateral(Position collateralPosition, char balloonVisualisation)
         {
+            bool canPopCollateral = false;
+
+            Balloon collateralBalloon = null;
+
             foreach (Balloon balloon in this.balloons)
             {
-                if (balloon.Position == popPosition)
+                if (balloon.Position == collateralPosition)
                 {
-                    balloon.RespondToInteraction();
+                    collateralBalloon = balloon;
                     break;
                 }
             }
+
+            if (collateralBalloon != null && collateralBalloon.Visualisation == balloonVisualisation)
+            {
+                canPopCollateral = true;
+                collateralBalloon.RespondToInteraction();
+            }
+
+            return canPopCollateral;
+        }
+
+        private void Restart()
+        {
+            this.Start();
+        }
+
+        private void Top()
+        {
+            Console.WriteLine("Scoreboard:");
+
+            KeyValuePair<int, string>[] playerRankings = this.highScores.ToArray();
+
+            int endIndex = Math.Min(playerRankings.Length, TopFive);
+
+            for (int index = 0; index < endIndex; index++)
+            {
+                KeyValuePair<int, string> player = playerRankings[index];
+
+                Console.WriteLine("{0}. {1} --> {2} moves", index + 1, player.Value, player.Key);
+            }
+
+            Console.ReadLine();
+        }
+
+        private void Exit()
+        {
+            Console.SetCursorPosition(0, 20);
+
+            Console.WriteLine("Thank you for playing Balloons Pop! Have a great day!");
+
+            this.QuitRequested = true;
+        }
+
+        private void Update()
+        {
+            foreach (GameObject gameObject in this.gameObjects)
+            {
+                if (gameObject.IsDestroyed == true)
+                {
+                    this.AmendObjectsAbove(gameObject);
+                }
+            }
+
+            List<Balloon> balloons = (List<Balloon>)this.balloons;
+
+            balloons.RemoveAll(balloon => balloon.IsDestroyed);
+
+            this.balloons = balloons;
+
+            List<GameObject> gameObjects = new List<GameObject>();
+
+            foreach (GameObject gameObject in this.gameObjects)
+            {
+                gameObjects.Add(gameObject);
+            }
+
+            var remainingObjects = gameObjects.Where(gameObject => !gameObject.IsDestroyed);
+
+            this.gameObjects.Clear();
+
+            foreach (GameObject gameObject in remainingObjects)
+            {
+                this.gameObjects.Add(gameObject);
+            }
+
+            this.Renderer.RenderObjects(this.gameObjects);
+        }
+
+        private void AmendObjectsAbove(GameObject originObject)
+        {
+            Position originPosition = originObject.Position;
+
+            for (int index = originPosition.Y - Constants.IterationStep; index >= 0; index -= Constants.IterationStep)
+            {
+                Position position = new Position(originPosition.X, index);
+
+                foreach (GameObject gameObject in this.gameObjects)
+                {
+                    if (gameObject.Position == position && gameObject is Balloon)
+                    {
+                        Balloon balloon = gameObject as Balloon;
+
+                        Position vectorChange = new Position(0, Constants.IterationStep);
+
+                        balloon.UpdatePosition(vectorChange);                        
+                    }
+                }
+            }
+        }
+
+        private void IsFinished()
+        {
+            if (this.balloons.Count == 0)
+            {
+                this.GameCompleted = true;
+            }
+        }
+
+        private void EnterHighScore()
+        {
+            Console.SetCursorPosition(0, 20);
+
+            Console.Write("You popped all baloons in {0} moves. Please enter your name for the top scoreboard: ", this.userMovesCount);
+
+            string userNickName = Console.ReadLine();
+
+            this.highScores.Add(this.userMovesCount, userNickName);
+
+            this.Top();
+
+            this.Start();            
         }
     }
 }

@@ -5,10 +5,8 @@
 
     public class ImmovableObjectFactory : IFactory
     {
-        private const int MaximalXPosition = 2 * Engine.TotalColumns;
-        private const int MaximalYPosition = 2 * Engine.TotalRows;
-        private const int XOffset = BalloonFactory.XOffset - 3;
-        private const int YOffset = BalloonFactory.YOffset - 2;
+        private const int XOffset = Constants.XOffset - 3;
+        private const int YOffset = Constants.YOffset - 2;
 
         private readonly char[] immovableObjectVisualisations = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
@@ -16,9 +14,9 @@
         {
             List<IRenderable> immovableObjects = new List<IRenderable>();
 
-            for (int row = 0; row < MaximalYPosition; row += 1 + BalloonFactory.SpaceBetweenBalloons)
+            for (int row = 0; row < Constants.MaximalYPosition; row += Constants.IterationStep)
             {
-                Position position = new Position(XOffset, row + BalloonFactory.YOffset);
+                Position position = new Position(XOffset, row + Constants.YOffset);
 
                 char visualisation = this.immovableObjectVisualisations[(row >> 1)];
 
@@ -27,9 +25,9 @@
                 immovableObjects.Add(immovableObject);
             }
 
-            for (int column = 0; column < MaximalXPosition; column += 1 + BalloonFactory.SpaceBetweenBalloons)
+            for (int column = 0; column < Constants.MaximalXPosition; column += Constants.IterationStep)
             {
-                Position position = new Position(column + BalloonFactory.XOffset, YOffset);
+                Position position = new Position(column + Constants.XOffset, YOffset);
 
                 char visualisation = this.immovableObjectVisualisations[(column >> 1)];
 

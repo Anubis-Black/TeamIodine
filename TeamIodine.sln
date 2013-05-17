@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "igra", "OldFiles\igra.cspro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BalloonsPop", "BalloonsPop\BalloonsPop.csproj", "{4A074AEE-9EAF-4271-8961-EC9DB4963DE8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BalloonsPop.Tests", "BalloonsPop.Tests\BalloonsPop.Tests.csproj", "{095DB9B8-F61D-474A-B28C-7397559DFBAE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,16 @@ Global
 		{4A074AEE-9EAF-4271-8961-EC9DB4963DE8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{4A074AEE-9EAF-4271-8961-EC9DB4963DE8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{4A074AEE-9EAF-4271-8961-EC9DB4963DE8}.Release|x86.ActiveCfg = Release|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{095DB9B8-F61D-474A-B28C-7397559DFBAE}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
